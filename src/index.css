@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html, body, #root {
+  height: 100%;
+  overscroll-behavior: none;
+  touch-action: manipulation;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* light theme overrides */
+.theme-light body,
+.theme-light {
+  color-scheme: light;
+}
+
+.theme-light .bg-base-950 { background-color: #f4f5f7 !important; }
+.theme-light .bg-base-900 { background-color: #ffffff !important; }
+.theme-light .bg-base-850 { background-color: #f0f1f4 !important; }
+.theme-light .bg-base-800 { background-color: #e7e9ee !important; }
+.theme-light .border-base-700 { border-color: #d7dae1 !important; }
+.theme-light .text-slate-100 { color: #12151c !important; }
+.theme-light .text-slate-300 { color: #3b4150 !important; }
+.theme-light .text-slate-400 { color: #5b6273 !important; }
+.theme-light .text-slate-500 { color: #7a8194 !important; }
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: #3a4a68; border-radius: 4px; }
+.theme-light ::-webkit-scrollbar-thumb { background: #c3c8d4; }
+
+.touch-target {
+  min-height: 48px;
+  min-width: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
