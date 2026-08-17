@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 
-export default function EditModal({ t, channel, onSave, onClose, onDelete }) {
+export default function EditModal({ t, lang, channel, onSave, onClose, onDelete }) {
   const [name, setName] = useState('')
   const [number, setNumber] = useState(1)
   const [type, setType] = useState('TV')
@@ -24,13 +24,28 @@ export default function EditModal({ t, channel, onSave, onClose, onDelete }) {
       >
         <div className="w-10 h-1 rounded-full bg-base-700 mx-auto mb-4" />
 
-        <label className="block text-xs text-slate-400 mb-1">{t('channelName')}</label>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs text-slate-400">{t('channelName')}</label>
+          {channel._mode === 'satcodx103' && (
+            <span className={`text-[11px] font-mono ${name.length > 20 ? 'text-rose-400' : 'text-slate-500'}`}>
+              {name.length}/20
+            </span>
+          )}
+        </div>
         <input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full touch-target px-3 rounded-lg bg-base-850 border border-base-700 text-base mb-3 focus:outline-none focus:ring-1 focus:ring-sky-500"
+          className="w-full touch-target px-3 rounded-lg bg-base-850 border border-base-700 text-base mb-1 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
+        {channel._mode === 'satcodx103' && name.length > 20 && (
+          <p className="text-[11px] text-rose-400 mb-2">
+            {lang === 'tr'
+              ? 'Bu format en fazla 20 karakter destekler, fazlası dışa aktarımda kesilecek.'
+              : 'This format supports up to 20 characters; the rest will be cut on export.'}
+          </p>
+        )}
+        <div className={channel._mode === 'satcodx103' && name.length > 20 ? '' : 'mb-3'} />
 
         <div className="flex gap-3 mb-3">
           <div className="flex-1">

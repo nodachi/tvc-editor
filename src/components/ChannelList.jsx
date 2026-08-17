@@ -2,9 +2,13 @@ import React, { useEffect, useRef, useState } from 'react'
 import { FixedSizeList } from 'react-window'
 import ChannelRow from './ChannelRow.jsx'
 
-const ROW_HEIGHT = 68
+const ROW_HEIGHT = 60
+export { ROW_HEIGHT }
 
-export default function ChannelList({ channels, selectMode, selectedIds, onToggle, onEdit, onLongPressSelect, t }) {
+export default function ChannelList({
+  channels, selectMode, selectedIds, onToggle, onEdit, onLongPressSelect, t,
+  reorderMode, dragId, onDragStart, outerRef, listRef,
+}) {
   const containerRef = useRef(null)
   const [height, setHeight] = useState(400)
 
@@ -20,20 +24,22 @@ export default function ChannelList({ channels, selectMode, selectedIds, onToggl
 
   if (channels.length === 0) {
     return (
-      <div ref={containerRef} className="flex-1 flex items-center justify-center text-slate-500 text-base p-4 text-center">
+      <div ref={containerRef} className="flex-1 flex items-center justify-center text-slate-500 text-sm">
         {t('noResults')}
       </div>
     )
   }
 
   return (
-    <div ref={containerRef} className="flex-1 min-h-0 w-full overflow-hidden">
+    <div ref={containerRef} className="flex-1 min-h-0">
       <FixedSizeList
+        ref={listRef}
+        outerRef={outerRef}
         height={height}
         width="100%"
         itemCount={channels.length}
         itemSize={ROW_HEIGHT}
-        overscanCount={10}
+        overscanCount={8}
       >
         {({ index, style }) => {
           const channel = channels[index]
@@ -48,6 +54,9 @@ export default function ChannelList({ channels, selectMode, selectedIds, onToggl
               onEdit={onEdit}
               onLongPressSelect={onLongPressSelect}
               t={t}
+              reorderMode={reorderMode}
+              dragging={dragId === channel.id}
+              onDragStart={onDragStart}
             />
           )
         }}

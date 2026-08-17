@@ -4,7 +4,7 @@ function TypeBadge({ type, t }) {
   const isRadio = type === 'RADIO'
   return (
     <span
-      className={`text-xs font-mono px-2 py-1 rounded shrink-0 ${
+      className={`text-[10px] font-mono px-1.5 py-0.5 rounded shrink-0 ${
         isRadio ? 'bg-violet-500/20 text-violet-300' : 'bg-sky-500/20 text-sky-300'
       }`}
     >
@@ -13,37 +13,24 @@ function TypeBadge({ type, t }) {
   )
 }
 
-export default function ChannelRow({ style, channel, selectMode, selected, onToggle, onEdit, onLongPressSelect, t }) {
+export default function ChannelRow({
+  style, channel, selectMode, selected, onToggle, onEdit, onLongPressSelect, t,
+  reorderMode, dragging, onDragStart,
+}) {
   const timerRef = useRef(null)
-  const isLongPressRef = useRef(false)
 
   const handleTouchStart = () => {
-    isLongPressRef.current = false
-    timerRef.current = setTimeout(() => {
-      isLongPressRef.current = true
-      if (navigator.vibrate) {
-        try { navigator.vibrate(50) } catch (e) {}
-      }
-      onLongPressSelect(channel.id)
-    }, 450)
+    if (reorderMode) return
+    timerRef.current = setTimeout(() => onLongPressSelect(channel.id), 420)
   }
-
   const clearTimer = () => {
     if (timerRef.current) clearTimeout(timerRef.current)
   }
 
-  const handleClick = (e) => {
-    if (isLongPressRef.current) {
-      e.preventDefault()
-      e.stopPropagation()
-      isLongPressRef.current = false
-      return
-    }
-    if (selectMode) {
-      onToggle(channel.id)
-    } else {
-      onEdit(channel.id)
-    }
+  const handleRowClick = () => {
+    if (reorderMode) return
+    if (selectMode) onToggle(channel.id)
+    else onEdit(channel.id)
   }
 
   return (
@@ -52,44 +39,53 @@ export default function ChannelRow({ style, channel, selectMode, selected, onTog
       onTouchStart={handleTouchStart}
       onTouchEnd={clearTimer}
       onTouchMove={clearTimer}
-      onClick={handleClick}
-      className={`flex items-center gap-3 px-4 border-b border-base-800 active:bg-base-800/80 transition-colors select-none touch-manipulation cursor-pointer ${
-        selected ? 'bg-sky-500/15 border-l-4 border-l-sky-500' : ''
+      onClick={handleRowClick}
+      className={`flex items-center gap-3 px-3 border-b border-base-800 touch-target ${
+        reorderMode ? '' : 'active:bg-base-800/60'
+      } ${selected ? 'bg-sky-500/10' : ''} ${
+        dragging ? 'bg-base-800 shadow-lg ring-1 ring-sky-500 z-10 opacity-95 scale-[1.01]' : ''
       }`}
     >
-      {selectMode && (
-        <div 
-          className="flex items-center justify-center p-2 -ml-2 shrink-0 touch-target"
-          onClick={(e) => {
-            e.stopPropagation()
-            onToggle(channel.id)
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={selected}
-            onChange={() => {}}
-            className="w-6 h-6 shrink-0 accent-sky-500 cursor-pointer pointer-events-none"
-          />
-        </div>
+      {selectMode && !reorderMode && (
+        <input
+          type="checkbox"
+          checked={selected}
+          onChange={() => onToggle(channel.id)}
+          onClick={(e) => e.stopPropagation()}
+          className="w-5 h-5 shrink-0 accent-sky-500"
+        />
       )}
-      <span className="font-mono text-sm font-semibold text-slate-400 w-12 shrink-0 text-right tabular-nums">
+      <span className="font-mono text-xs text-slate-500 w-10 shrink-0 text-right tabular-nums">
         {channel.number}
       </span>
-      <div className="flex-1 min-w-0 py-2">
-        <div className="truncate text-base font-medium text-slate-100 leading-snug">{channel.name}</div>
-        <div className="flex items-center gap-2 mt-0.5">
+      <div className="flex-1 min-w-0">
+        <div className="truncate text-sm text-slate-100 leading-tight">{channel.name}</div>
+        <div className="flex items-center gap-1.5 mt-0.5">
           {channel._uncertain && (
-            <span className="text-xs text-amber-400 font-bold">⚠</span>
+            <span className="text-[10px] text-amber-400">⚠</span>
           )}
           {channel.satellite && (
-            <span className="text-xs text-slate-400 truncate font-mono">{channel.satellite}</span>
+            <span className="text-[10px] text-slate-500 truncate font-mono">{channel.satellite}</span>
           )}
         </div>
       </div>
       <TypeBadge type={channel.type} t={t} />
       {channel.encrypted === true && (
-        <span className="text-xs font-mono px-2 py-1 rounded bg-rose-500/20 text-rose-300 shrink-0">🔒</span>
+        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 shrink-0">🔒</span>
+      )}
+      {reorderMode && (
+        <button
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            onDragStart(channel.id, e.clientY, e.pointerId, e.currentTarget)
+          }}
+          className="shrink-0 w-11 h-11 -mr-2 flex items-center justify-center text-slate-400 text-xl cursor-grab active:cursor-grabbing"
+          style={{ touchAction: 'none' }}
+          aria-label="drag"
+        >
+          ⠿
+        </button>
       )}
     </div>
   )

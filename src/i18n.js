@@ -13,7 +13,6 @@ export const STR = {
     deselectAll: 'Seçimi Kaldır',
     selectEncrypted: 'Sadece Şifreli',
     selectRadio: 'Sadece Radyo',
-    selectTV: 'Sadece TV',
     moveSelected: 'Taşı',
     deleteSelected: 'Sil',
     clearSelection: 'Temizle',
@@ -65,7 +64,11 @@ export const STR = {
     close: 'Kapat',
     downloadReady: 'İndirmeye hazır',
     formatLabel: 'Format',
-      exportAs: 'Farklı dışa aktar',
+    exportAs: 'Farklı dışa aktar',
+    reorderMode: 'Sırala',
+    exitReorderMode: 'Sıralamayı Bitir',
+    dragHint: 'Bir kanalı tutup sürükleyerek yerini değiştir',
+    reorderDisabledSearch: 'Sıralama modu için önce aramayı temizleyin',
   },
   en: {
     appName: 'Channel Editor',
@@ -81,7 +84,6 @@ export const STR = {
     deselectAll: 'Deselect All',
     selectEncrypted: 'Encrypted Only',
     selectRadio: 'Radio Only',
-    selectTV: 'TV Only',
     moveSelected: 'Move',
     deleteSelected: 'Delete',
     clearSelection: 'Clear',
@@ -133,7 +135,11 @@ export const STR = {
     close: 'Close',
     downloadReady: 'Ready to download',
     formatLabel: 'Format',
-      exportAs: 'Export as',
+    exportAs: 'Export as',
+    reorderMode: 'Reorder',
+    exitReorderMode: 'Done Reordering',
+    dragHint: 'Press and drag a channel to move it',
+    reorderDisabledSearch: 'Clear search to use reorder mode',
   }
 }
 
