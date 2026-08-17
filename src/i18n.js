@@ -67,7 +67,7 @@ export const STR = {
     exportAs: 'Farklı dışa aktar',
     reorderMode: 'Sırala',
     exitReorderMode: 'Sıralamayı Bitir',
-    dragHint: 'Bir kanalı tutup sürükleyerek yerini değiştir',
+    dragHint: 'Bir kanalın ▲▼ tuşuna dokun veya basılı tut',
     reorderDisabledSearch: 'Sıralama modu için önce aramayı temizleyin',
   },
   en: {
@@ -138,7 +138,7 @@ export const STR = {
     exportAs: 'Export as',
     reorderMode: 'Reorder',
     exitReorderMode: 'Done Reordering',
-    dragHint: 'Press and drag a channel to move it',
+    dragHint: 'Tap or hold a channel\'s ▲▼ buttons',
     reorderDisabledSearch: 'Clear search to use reorder mode',
   }
 }

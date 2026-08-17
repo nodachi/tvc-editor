@@ -15,7 +15,7 @@ function TypeBadge({ type, t }) {
 
 export default function ChannelRow({
   style, channel, selectMode, selected, onToggle, onEdit, onLongPressSelect, t,
-  reorderMode, dragging, onDragStart,
+  reorderMode, onMoveStart, onMoveStop,
 }) {
   const timerRef = useRef(null)
 
@@ -42,9 +42,7 @@ export default function ChannelRow({
       onClick={handleRowClick}
       className={`flex items-center gap-3 px-3 border-b border-base-800 touch-target ${
         reorderMode ? '' : 'active:bg-base-800/60'
-      } ${selected ? 'bg-sky-500/10' : ''} ${
-        dragging ? 'bg-base-800 shadow-lg ring-1 ring-sky-500 z-10 opacity-95 scale-[1.01]' : ''
-      }`}
+      } ${selected ? 'bg-sky-500/10' : ''}`}
     >
       {selectMode && !reorderMode && (
         <input
@@ -69,23 +67,33 @@ export default function ChannelRow({
           )}
         </div>
       </div>
-      <TypeBadge type={channel.type} t={t} />
-      {channel.encrypted === true && (
+      {!reorderMode && <TypeBadge type={channel.type} t={t} />}
+      {!reorderMode && channel.encrypted === true && (
         <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 shrink-0">🔒</span>
       )}
       {reorderMode && (
-        <button
-          onPointerDown={(e) => {
-            e.stopPropagation()
-            e.preventDefault()
-            onDragStart(channel.id, e.clientY, e.pointerId, e.currentTarget)
-          }}
-          className="shrink-0 w-11 h-11 -mr-2 flex items-center justify-center text-slate-400 text-xl cursor-grab active:cursor-grabbing"
-          style={{ touchAction: 'none' }}
-          aria-label="drag"
-        >
-          ⠿
-        </button>
+        <div className="flex flex-col shrink-0 -mr-1" style={{ touchAction: 'none' }}>
+          <button
+            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); onMoveStart(channel.id, -1) }}
+            onPointerUp={onMoveStop}
+            onPointerLeave={onMoveStop}
+            onPointerCancel={onMoveStop}
+            className="w-11 h-6 flex items-center justify-center text-slate-300 text-base rounded-t-md bg-base-800 active:bg-sky-600"
+            aria-label="up"
+          >
+            ▲
+          </button>
+          <button
+            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); onMoveStart(channel.id, 1) }}
+            onPointerUp={onMoveStop}
+            onPointerLeave={onMoveStop}
+            onPointerCancel={onMoveStop}
+            className="w-11 h-6 flex items-center justify-center text-slate-300 text-base rounded-b-md bg-base-800 active:bg-sky-600"
+            aria-label="down"
+          >
+            ▼
+          </button>
+        </div>
       )}
     </div>
   )

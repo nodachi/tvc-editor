@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import TopBar from './components/TopBar.jsx'
 import BulkToolbar from './components/BulkToolbar.jsx'
 import StatusBar from './components/StatusBar.jsx'
-import ChannelList, { ROW_HEIGHT } from './components/ChannelList.jsx'
+import ChannelList from './components/ChannelList.jsx'
 import EditModal from './components/EditModal.jsx'
 import MoveModal from './components/MoveModal.jsx'
 import ExportModal from './components/ExportModal.jsx'
@@ -15,8 +15,8 @@ import { t as translate } from './i18n.js'
 
 const HISTORY_LIMIT = 50
 const AUTOSAVE_DEBOUNCE = 900
-const EDGE_ZONE = 56
-const MAX_SCROLL_SPEED = 18
+const HOLD_INITIAL_DELAY = 400
+const HOLD_REPEAT_INTERVAL = 130
 
 export default function App() {
   const [lang, setLang] = useState(localStorage.getItem('tce_lang') || 'tr')
@@ -36,13 +36,9 @@ export default function App() {
   const [search, setSearch] = useState('')
 
   const [reorderMode, setReorderMode] = useState(false)
-  const [dragId, setDragId] = useState(null)
-  const outerScrollRef = useRef(null)
   const channelsRef = useRef([])
-  const dragSnapshotRef = useRef(null)
-  const dragCurrentIndexRef = useRef(-1)
-  const lastPointerYRef = useRef(0)
-  const rafIdRef = useRef(null)
+  const listRef = useRef(null)
+  const holdRef = useRef({ timer: null, interval: null, snapshot: null })
 
   useEffect(() => { channelsRef.current = channels }, [channels])
 
@@ -140,85 +136,57 @@ export default function App() {
 
   const uncertainCount = useMemo(() => channels.filter((c) => c._uncertain).length, [channels])
 
-  // ---- drag-to-reorder (touch/pointer) ----
-  const stopAutoScrollLoop = () => {
-    if (rafIdRef.current) {
-      cancelAnimationFrame(rafIdRef.current)
-      rafIdRef.current = null
+  // ---- reorder mode: tap or press-and-hold ▲/▼ buttons ----
+  const moveChannelStep = useCallback((id, direction) => {
+    let newIdx = -1
+    setChannels((prev) => {
+      const idx = prev.findIndex((c) => c.id === id)
+      newIdx = idx + direction
+      if (idx === -1 || newIdx < 0 || newIdx >= prev.length) {
+        newIdx = idx
+        return prev
+      }
+      const arr = [...prev]
+      const [item] = arr.splice(idx, 1)
+      arr.splice(newIdx, 0, item)
+      return arr.map((c, i) => ({ ...c, number: i + 1 }))
+    })
+    if (newIdx >= 0) {
+      requestAnimationFrame(() => listRef.current?.scrollToItem(newIdx, 'smart'))
     }
-  }
-
-  const dragTick = useCallback(() => {
-    const container = outerScrollRef.current
-    if (!container || dragCurrentIndexRef.current === -1) {
-      rafIdRef.current = null
-      return
-    }
-    const rect = container.getBoundingClientRect()
-    const y = lastPointerYRef.current
-
-    if (y < rect.top + EDGE_ZONE) {
-      const speed = Math.ceil(((rect.top + EDGE_ZONE - y) / EDGE_ZONE) * MAX_SCROLL_SPEED)
-      container.scrollTop = Math.max(0, container.scrollTop - speed)
-    } else if (y > rect.bottom - EDGE_ZONE) {
-      const speed = Math.ceil(((y - (rect.bottom - EDGE_ZONE)) / EDGE_ZONE) * MAX_SCROLL_SPEED)
-      container.scrollTop = container.scrollTop + speed
-    }
-
-    const total = channelsRef.current.length
-    const relativeY = y - rect.top + container.scrollTop
-    const targetIndex = Math.max(0, Math.min(total - 1, Math.floor(relativeY / ROW_HEIGHT)))
-
-    if (targetIndex !== dragCurrentIndexRef.current) {
-      setChannels((prev) => {
-        const arr = [...prev]
-        const [item] = arr.splice(dragCurrentIndexRef.current, 1)
-        arr.splice(targetIndex, 0, item)
-        return arr
-      })
-      dragCurrentIndexRef.current = targetIndex
-    }
-
-    rafIdRef.current = requestAnimationFrame(dragTick)
   }, [])
 
-  const onPointerMoveDrag = useCallback((e) => {
-    lastPointerYRef.current = e.clientY
-  }, [])
-
-  const onPointerUpDrag = useCallback(() => {
-    window.removeEventListener('pointermove', onPointerMoveDrag)
-    window.removeEventListener('pointerup', onPointerUpDrag)
-    window.removeEventListener('pointercancel', onPointerUpDrag)
-    stopAutoScrollLoop()
-
-    const snapshot = dragSnapshotRef.current
-    const finalArr = channelsRef.current
-    if (snapshot && snapshot.map((c) => c.id).join(',') !== finalArr.map((c) => c.id).join(',')) {
-      const renumbered = finalArr.map((c, i) => ({ ...c, number: i + 1 }))
-      setPast((p) => {
-        const np = [...p, snapshot]
-        return np.length > HISTORY_LIMIT ? np.slice(np.length - HISTORY_LIMIT) : np
-      })
-      setFuture([])
-      setChannels(renumbered)
+  const stopMoveHold = useCallback(() => {
+    window.removeEventListener('pointerup', stopMoveHold)
+    window.removeEventListener('pointercancel', stopMoveHold)
+    clearTimeout(holdRef.current.timer)
+    clearInterval(holdRef.current.interval)
+    holdRef.current.timer = null
+    holdRef.current.interval = null
+    const snapshot = holdRef.current.snapshot
+    if (snapshot) {
+      const finalArr = channelsRef.current
+      if (snapshot.map((c) => c.id).join(',') !== finalArr.map((c) => c.id).join(',')) {
+        setPast((p) => {
+          const np = [...p, snapshot]
+          return np.length > HISTORY_LIMIT ? np.slice(np.length - HISTORY_LIMIT) : np
+        })
+        setFuture([])
+      }
     }
-    dragSnapshotRef.current = null
-    dragCurrentIndexRef.current = -1
-    setDragId(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    holdRef.current.snapshot = null
+  }, [moveChannelStep])
 
-  const onDragStart = useCallback((id, clientY) => {
-    dragSnapshotRef.current = channelsRef.current
-    dragCurrentIndexRef.current = channelsRef.current.findIndex((c) => c.id === id)
-    lastPointerYRef.current = clientY
-    setDragId(id)
-    window.addEventListener('pointermove', onPointerMoveDrag)
-    window.addEventListener('pointerup', onPointerUpDrag)
-    window.addEventListener('pointercancel', onPointerUpDrag)
-    rafIdRef.current = requestAnimationFrame(dragTick)
-  }, [dragTick, onPointerMoveDrag, onPointerUpDrag])
+  const startMoveHold = useCallback((id, direction) => {
+    if (holdRef.current.snapshot) return // already holding (avoid double-start)
+    holdRef.current.snapshot = channelsRef.current
+    moveChannelStep(id, direction)
+    holdRef.current.timer = setTimeout(() => {
+      holdRef.current.interval = setInterval(() => moveChannelStep(id, direction), HOLD_REPEAT_INTERVAL)
+    }, HOLD_INITIAL_DELAY)
+    window.addEventListener('pointerup', stopMoveHold)
+    window.addEventListener('pointercancel', stopMoveHold)
+  }, [moveChannelStep, stopMoveHold])
 
   const onToggleReorderMode = () => {
     setReorderMode((r) => {
@@ -372,9 +340,9 @@ export default function App() {
           onLongPressSelect={onLongPressSelect}
           t={t}
           reorderMode={reorderMode}
-          dragId={dragId}
-          onDragStart={onDragStart}
-          outerRef={outerScrollRef}
+          onMoveStart={startMoveHold}
+          onMoveStop={stopMoveHold}
+          listRef={listRef}
         />
       )}
 

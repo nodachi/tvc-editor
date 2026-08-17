@@ -7,7 +7,7 @@ export { ROW_HEIGHT }
 
 export default function ChannelList({
   channels, selectMode, selectedIds, onToggle, onEdit, onLongPressSelect, t,
-  reorderMode, dragId, onDragStart, outerRef, listRef,
+  reorderMode, onMoveStart, onMoveStop, listRef,
 }) {
   const containerRef = useRef(null)
   const [height, setHeight] = useState(400)
@@ -34,7 +34,6 @@ export default function ChannelList({
     <div ref={containerRef} className="flex-1 min-h-0">
       <FixedSizeList
         ref={listRef}
-        outerRef={outerRef}
         height={height}
         width="100%"
         itemCount={channels.length}
@@ -55,8 +54,8 @@ export default function ChannelList({
               onLongPressSelect={onLongPressSelect}
               t={t}
               reorderMode={reorderMode}
-              dragging={dragId === channel.id}
-              onDragStart={onDragStart}
+              onMoveStart={onMoveStart}
+              onMoveStop={onMoveStop}
             />
           )
         }}
