@@ -74,9 +74,13 @@ export default function ChannelRow({
       {reorderMode && (
         <div className="flex flex-col shrink-0 -mr-1" style={{ touchAction: 'none' }}>
           <button
-            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); onMoveStart(channel.id, -1) }}
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              e.currentTarget.setPointerCapture(e.pointerId)
+              onMoveStart(channel.id, -1)
+            }}
             onPointerUp={onMoveStop}
-            onPointerLeave={onMoveStop}
             onPointerCancel={onMoveStop}
             className="w-11 h-6 flex items-center justify-center text-slate-300 text-base rounded-t-md bg-base-800 active:bg-sky-600"
             aria-label="up"
@@ -84,9 +88,13 @@ export default function ChannelRow({
             ▲
           </button>
           <button
-            onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); onMoveStart(channel.id, 1) }}
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              e.currentTarget.setPointerCapture(e.pointerId)
+              onMoveStart(channel.id, 1)
+            }}
             onPointerUp={onMoveStop}
-            onPointerLeave={onMoveStop}
             onPointerCancel={onMoveStop}
             className="w-11 h-6 flex items-center justify-center text-slate-300 text-base rounded-b-md bg-base-800 active:bg-sky-600"
             aria-label="down"
